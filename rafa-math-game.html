@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Brick Math">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1a1a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAACYElEQVR42u3doQ2AMBRF0a9RBNkxmBPNRAgkU7ABGibANE3awhFX89L8o4mU0i39tfAIAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJA+jqAa4usbLIJAJtsAsAmmwCwySYAbLIJAJsAAMAmAACwCQAAbAIAAJsAAMAmAACwCYC2AOxrZGWTTQDYZBMANtkEgE02AWCTTQDYBAAANgEAgE0AAGATAADYBAAANgEAgE0AAGATAADYBAAANgEAgE0AAGATAADYBAAANgEAgE0AAGATAK+d81yk3Ecs9X2b+t0EgGMDAADHBgAAjg0AAGwCoDsAEgASABIAEgASABIAEgASABIAUisAjnGSqgaAAABAAAAgAAAQAAAIAAAEAAACAAABAIAAAEAAACAAABAAAAgAAAQAAAIAAAHQDIBrC30kAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADA4QAAgAAAQAAAIAAAEAAACAAABAAAAgAAAQCAAABAAAAgAAAQAAAIAAAEAAACAAABAIAAAEAAACAAABAAAAgAAAQAAAIAAAEAgAAAQAAAIAD8J1j+EwyAAABAAAAgAAAQAAAIAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkAqVsAyzBIVQNAAAAgAAAQAAAIAAAEAAACAAABAIAAAEAAlAYg9RwAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAarEHdJ+ZAQr5mccAAAAASUVORK5CYII=">
+<title>Rafa's Brick Math</title>
+<style>
+/* ── FONTS: system only, zero network dependency ── */
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  background: #1a1a1a;
+  min-height: 100%;
+  padding: 20px 14px 60px;
+  overflow-x: hidden;
+}
+
+/* baseplate grid via SVG data URI - no network */
+body::before {
+  content:'';
+  position:fixed; top:0;left:0;right:0;bottom:0; z-index:0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Ccircle cx='14' cy='14' r='2' fill='%232a2a2a'/%3E%3C/svg%3E");
+  pointer-events:none;
+}
+
+/* everything above bg */
+#lang-screen, #game-shell { position:relative; z-index:1; }
+
+/* ── CENTRE WRAPPER ── */
+.centre { display:block; margin:0 auto; max-width:460px; }
+
+/* ── LANG PICKER ── */
+#lang-screen { max-width:380px; margin:0 auto; padding-top:10px; }
+
+.logo-studs { display:block; text-align:center; margin-bottom:-2px; }
+.logo-studs span {
+  display:inline-block; width:18px; height:10px;
+  border-radius:9px 9px 0 0; background:#d4a800;
+  margin:0 3px; vertical-align:bottom;
+}
+.logo-box {
+  display:block; text-align:center;
+  background:#F5C400; color:#D01012;
+  font-size:2.2rem; font-weight:900; letter-spacing:3px;
+  padding:10px 28px 12px; border-radius:0 0 8px 8px;
+  box-shadow: 0 7px 0 #b89200;
+  margin-bottom:20px;
+}
+.lang-title {
+  display:block; text-align:center;
+  color:#F5C400; font-size:1.3rem; font-weight:900;
+  margin-bottom:6px;
+}
+.lang-hint {
+  display:block; text-align:center;
+  color:#777; font-size:.82rem; margin-bottom:18px;
+}
+.lang-btn {
+  display:block; width:100%; margin-bottom:10px;
+  font-size:1.2rem; font-weight:900; padding:16px 20px;
+  border-radius:8px; border:none; cursor:pointer; text-align:center;
+  -webkit-appearance:none; color:white;
+  box-shadow:0 6px 0 rgba(0,0,0,.35);
+  letter-spacing:.5px;
+}
+.lang-btn.en { background:#D01012; }
+.lang-btn.nl { background:#006CB7; }
+.lang-btn.he { background:#00852B; }
+.lang-btn:active { -webkit-transform:translateY(4px); transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,.35); }
+
+/* ── GAME SHELL ── */
+#game-shell { display:none; max-width:460px; margin:0 auto; }
+
+/* HEADER BRICK */
+.hdr-studs { display:block; text-align:center; margin-bottom:-2px; }
+.hdr-stud {
+  display:inline-block; width:14px; height:8px;
+  border-radius:7px 7px 0 0; background:#8a0000;
+  margin:0 2px; vertical-align:bottom;
+}
+.hdr-brick {
+  display:block; text-align:center;
+  background:#D01012; color:#F5C400;
+  font-size:1.6rem; font-weight:900; letter-spacing:1px;
+  padding:8px 20px 10px; border-radius:0 0 6px 6px;
+  box-shadow:0 6px 0 #8a0000; margin-bottom:10px;
+}
+.lvl-row { text-align:center; margin-bottom:12px; }
+.lvl-tag {
+  display:inline-block; padding:5px 16px;
+  border-radius:6px; font-size:.72rem; font-weight:900;
+  letter-spacing:2px; text-transform:uppercase;
+  color:white; background:#006CB7;
+  box-shadow:0 4px 0 #004a80;
+}
+.lang-sw { background:none; border:none; color:#555; font-size:.75rem; font-weight:900; cursor:pointer; text-decoration:underline; margin-left:8px; }
+
+/* PROGRESS */
+.prog-labels { display:block; overflow:hidden; font-size:.78rem; font-weight:900; color:#aaa; margin-bottom:5px; }
+.prog-labels span.right { float:right; }
+.prog-track { background:#333; border-radius:4px; height:18px; overflow:hidden; border:2px solid #444; margin-bottom:10px; }
+.prog-fill { height:100%; width:0%; background:#00852B; border-radius:2px; }
+
+/* CHIPS */
+.chips { text-align:center; margin-bottom:12px; }
+.chip {
+  display:inline-block; background:#2a2a2a; border:2px solid #444;
+  border-radius:6px; padding:5px 12px; font-weight:900; font-size:.78rem;
+  color:#ddd; box-shadow:0 3px 0 #111; margin:3px;
+}
+
+/* PIPS row */
+.pips { text-align:center; margin-bottom:-2px; position:relative; z-index:2; }
+.pip {
+  display:inline-block; width:12px; height:12px; border-radius:50%;
+  background:#333; border:2px solid #444;
+  box-shadow:0 2px 0 #111; margin:0 2px;
+}
+.pip.done   { background:#00852B; border-color:#006622; }
+.pip.active { background:#F5C400; border-color:#c9a000; }
+
+/* CARD */
+.card-studs { display:block; overflow:hidden; }
+.card-stud {
+  display:inline-block; height:11px; width:10%;
+  border-radius:8px 8px 0 0; background:#ddd;
+  border:1px solid #fff; margin-right:1px;
+}
+.card {
+  background:#F5F4EE; border-radius:0 0 8px 8px;
+  padding:28px 20px 22px; margin-bottom:14px;
+  box-shadow:0 8px 0 #c8c5b8; border:3px solid #fff; border-top:none;
+  text-align:center; position:relative;
+}
+
+/* QUESTION */
+.q-label { font-size:.68rem; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:#006CB7; margin-bottom:4px; }
+.question { font-size:3rem; font-weight:900; color:#1a1a1a; margin:4px 0 14px; direction:ltr; unicode-bidi:embed; }
+.question .num   { color:#D01012; }
+.question .op    { color:#006CB7; margin:0 4px; }
+.question .qmark { color:#F5C400; }
+
+/* HINT */
+.hint-btn {
+  display:inline-block; margin-bottom:10px;
+  font-size:.85rem; font-weight:900; padding:6px 16px;
+  border-radius:6px; border:none; background:#ddd; color:#555;
+  cursor:pointer; box-shadow:0 3px 0 #aaa; opacity:.45;
+  -webkit-appearance:none;
+}
+.hint-btn.nudge { opacity:1; background:#F5C400; color:#1a1a1a; box-shadow:0 3px 0 #b89200; }
+.hint-btn.used  { opacity:.3; }
+.hint-btn:active { -webkit-transform:translateY(3px); transform:translateY(3px); box-shadow:none; }
+
+/* VISUAL HINT */
+.visual-wrap { min-height:8px; margin-bottom:10px; }
+
+/* stud (top-view dot) */
+.stud {
+  display:inline-block; width:16px; height:16px; border-radius:50%;
+  box-shadow:0 0 0 2px rgba(0,0,0,.2), inset 0 0 0 4px rgba(255,255,255,.2);
+  margin:2px;
+}
+/* top-view brick = coloured box containing studs */
+.tbrick {
+  display:inline-block; padding:5px;
+  border-radius:5px; border:2px solid rgba(0,0,0,.2);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.2), inset 0 -2px 0 rgba(0,0,0,.12);
+  vertical-align:middle;
+}
+.tbrick .stud-row { display:block; white-space:nowrap; }
+.hint-eq { font-size:1.4rem; font-weight:900; color:#006CB7; vertical-align:middle; margin:0 6px; }
+
+/* mult grid */
+.mult-grid-wrap { display:block; }
+.mult-expl { font-size:.8rem; font-weight:900; color:#006CB7; margin-bottom:5px; direction:ltr; }
+.mgrow { display:block; white-space:nowrap; margin-bottom:4px; }
+.mdot  { display:inline-block; width:16px; height:16px; border-radius:50%; background:#006CB7;
+  box-shadow:0 0 0 2px rgba(0,0,0,.2),inset 0 0 0 4px rgba(255,255,255,.2); margin:2px; }
+
+/* div groups */
+.div-groups-wrap { display:block; }
+.dg-row { display:block; white-space:nowrap; margin-bottom:8px; text-align:center; }
+.dgroup {
+  display:inline-block; border:2px dashed #F5C400; border-radius:8px;
+  padding:4px; background:rgba(245,196,0,.08); margin:0 3px; vertical-align:top;
+}
+.gdot  { display:inline-block; width:14px; height:14px; border-radius:50%; background:#E76419;
+  box-shadow:0 0 0 2px rgba(0,0,0,.2),inset 0 0 0 3px rgba(255,255,255,.2); margin:2px; }
+
+/* ANSWER BUTTONS — 2x2 grid via float */
+.options { overflow:hidden; margin-top:4px; width:100%; }
+.opt-half { display:block; float:left; width:47%; margin:1%; }
+.opt-studs { display:block; white-space:nowrap; padding:0 6px; }
+.opt-stud  { display:inline-block; height:8px; border-radius:5px 5px 0 0; width:30%; margin-right:2%; }
+.opt {
+  display:block; width:100%; font-size:1.8rem; font-weight:900;
+  padding:14px 0; border-radius:0 0 8px 8px; border:none;
+  cursor:pointer; background:#E0E0E0; color:#1a1a1a;
+  box-shadow:0 6px 0 #aaa; -webkit-appearance:none;
+}
+.opt.correct { background:#00852B; color:white; box-shadow:0 6px 0 #005a1d; }
+.opt.wrong   { background:#D01012; color:white; box-shadow:0 6px 0 #8a0000; }
+.opt:active:not(:disabled) { -webkit-transform:translateY(4px); transform:translateY(4px); box-shadow:0 2px 0 #aaa; }
+.opt:disabled { cursor:default; }
+.clearfix::after { content:''; display:table; clear:both; }
+
+/* FEEDBACK */
+.feedback { margin-top:12px; font-size:1.3rem; font-weight:900; min-height:30px; }
+.feedback.ok  { color:#00852B; }
+.feedback.bad { color:#D01012; }
+.next-btn {
+  display:none; margin-top:11px; font-size:1rem; font-weight:900;
+  padding:11px 32px; border-radius:8px; border:none;
+  background:#F5C400; color:#1a1a1a; cursor:pointer;
+  box-shadow:0 5px 0 #b89200; -webkit-appearance:none;
+}
+.next-btn:active { -webkit-transform:translateY(4px); transform:translateY(4px); box-shadow:0 1px 0 #b89200; }
+
+/* ROUND COMPLETE */
+.round-complete { display:none; text-align:center; padding:10px 0; }
+.trophy-big { font-size:5rem; display:block; margin-bottom:8px; }
+.rc-title { font-size:1.7rem; font-weight:900; color:#1a1a1a; margin-bottom:4px; }
+.rc-msg   { font-size:.9rem; font-weight:900; color:#555; margin-bottom:10px; }
+
+/* MEDALS */
+.medals-row { margin-bottom:10px; }
+.medal-icon  { font-size:1.9rem; display:inline-block; margin:0 4px; }
+.medal-label { display:block; font-size:.55rem; font-weight:900; letter-spacing:1px; text-transform:uppercase; color:#888; }
+.medals-total { display:inline-block; background:#1a1a1a; color:#F5C400; border-radius:6px; padding:5px 14px; font-weight:900; font-size:.8rem; margin-bottom:10px; }
+
+/* LEVEL UP */
+.lvlup-card { background:#D01012; border-radius:8px; padding:14px 16px; margin-bottom:10px; color:white; box-shadow:0 6px 0 #8a0000; display:none; }
+.lvlup-badge { font-size:2rem; display:block; margin-bottom:4px; }
+.lvlup-title { font-size:1.3rem; font-weight:900; margin-bottom:3px; }
+.lvlup-sub   { font-size:.78rem; font-weight:900; opacity:.85; margin-bottom:8px; }
+.lvlup-name  { display:inline-block; background:rgba(0,0,0,.2); border-radius:6px; padding:5px 12px; font-size:.95rem; font-weight:900; }
+
+.action-btn {
+  display:block; width:100%; max-width:260px; margin:0 auto 8px;
+  font-size:1.05rem; font-weight:900; padding:13px 0;
+  border-radius:8px; border:none; cursor:pointer; -webkit-appearance:none;
+}
+.action-btn.go    { background:#F5C400; color:#1a1a1a; box-shadow:0 5px 0 #b89200; }
+.action-btn.again { background:#006CB7; color:white;   box-shadow:0 5px 0 #004a80; }
+.action-btn:active { -webkit-transform:translateY(4px); transform:translateY(4px); box-shadow:0 1px 0 rgba(0,0,0,.3); }
+.hist-toggle { background:none; border:none; color:#006CB7; font-size:.8rem; font-weight:900; cursor:pointer; text-decoration:underline; }
+
+/* HISTORY */
+.history-panel { display:none; margin-top:12px; }
+.hist-title { color:#F5C400; font-size:.95rem; font-weight:900; text-align:center; margin-bottom:8px; display:block; }
+.hist-row {
+  background:#2a2a2a; border:2px solid #444; border-radius:6px;
+  padding:8px 12px; margin-bottom:6px; overflow:hidden; color:#ddd;
+  font-weight:700; font-size:.8rem;
+}
+.hist-row .right { float:right; }
+.pill { display:inline-block; padding:2px 10px; border-radius:4px; font-size:.74rem; font-weight:900; }
+.pill.hi  { background:#00852B; color:white; }
+.pill.mid { background:#F5C400; color:#1a1a1a; }
+.pill.lo  { background:#D01012; color:white; }
+
+/* CONFETTI */
+.cf { position:fixed; border-radius:2px; pointer-events:none; z-index:999; }
+
+/* RTL */
+body.rtl #game-shell, body.rtl #lang-screen { direction:rtl; }
+.question { direction:ltr !important; unicode-bidi:embed !important; }
+
+/* MINIFIG SVGs in corners - decorative only */
+.fig-left, .fig-right {
+  position:fixed; bottom:0; pointer-events:none; z-index:2;
+  opacity:.85;
+}
+.fig-left  { left:2px; }
+.fig-right { right:2px; -webkit-transform:scaleX(-1); transform:scaleX(-1); }
+
+/* Simple float animation using CSS */
+@-webkit-keyframes bob { 0%{-webkit-transform:translateY(0)}50%{-webkit-transform:translateY(-8px)}100%{-webkit-transform:translateY(0)} }
+@keyframes bob          { 0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)} }
+.fig-left  { -webkit-animation:bob 3s ease-in-out infinite; animation:bob 3s ease-in-out infinite; }
+.fig-right { -webkit-animation:bob 3s ease-in-out infinite; animation:bob 3s ease-in-out infinite; -webkit-animation-delay:1.5s; animation-delay:1.5s; }
+@-webkit-keyframes bobflip { 0%{-webkit-transform:scaleX(-1) translateY(0)}50%{-webkit-transform:scaleX(-1) translateY(-8px)}100%{-webkit-transform:scaleX(-1) translateY(0)} }
+@keyframes bobflip          { 0%{transform:scaleX(-1) translateY(0)}50%{transform:scaleX(-1) translateY(-8px)}100%{transform:scaleX(-1) translateY(0)} }
+.fig-right { -webkit-animation-name:bobflip; animation-name:bobflip; }
+
+@-webkit-keyframes fall { 0%{-webkit-transform:translateY(-20px) rotate(0deg);opacity:1}100%{-webkit-transform:translateY(110vh) rotate(720deg);opacity:0} }
+@keyframes fall          { 0%{transform:translateY(-20px) rotate(0deg);opacity:1}          100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+.cf { -webkit-animation:fall linear forwards; animation:fall linear forwards; }
+</style>
+</head>
+<body>
+
+<!-- Minifigs in corners -->
+<svg class="fig-left" width="46" height="96" viewBox="0 0 52 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="8" y="72" width="14" height="34" rx="4" fill="#006CB7"/>
+  <rect x="28" y="72" width="14" height="34" rx="4" fill="#006CB7"/>
+  <rect x="5" y="100" width="18" height="10" rx="3" fill="#222"/>
+  <rect x="27" y="100" width="18" height="10" rx="3" fill="#222"/>
+  <rect x="6" y="38" width="38" height="36" rx="4" fill="#D01012"/>
+  <rect x="-2" y="40" width="10" height="28" rx="4" fill="#F5C400"/>
+  <rect x="42" y="40" width="10" height="28" rx="4" fill="#F5C400"/>
+  <circle cx="3"  cy="70" r="6" fill="#F5C400"/>
+  <circle cx="47" cy="70" r="6" fill="#F5C400"/>
+  <rect x="19" y="30" width="12" height="10" rx="2" fill="#F5C400"/>
+  <rect x="8" y="6" width="34" height="28" rx="8" fill="#F5C400"/>
+  <circle cx="25" cy="6" r="6" fill="#F5C400" stroke="#c9a000" stroke-width="1.5"/>
+  <circle cx="17" cy="18" r="3" fill="#222"/>
+  <circle cx="33" cy="18" r="3" fill="#222"/>
+  <path d="M15 24 Q25 31 35 24" stroke="#222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <rect x="13" y="46" width="24" height="14" rx="3" fill="#F5C400"/>
+  <text x="25" y="57" font-family="Arial" font-size="8" font-weight="900" fill="#D01012" text-anchor="middle">LEGO</text>
+</svg>
+
+<svg class="fig-right" width="46" height="96" viewBox="0 0 52 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="8" y="72" width="14" height="34" rx="4" fill="#00852B"/>
+  <rect x="28" y="72" width="14" height="34" rx="4" fill="#00852B"/>
+  <rect x="5" y="100" width="18" height="10" rx="3" fill="#222"/>
+  <rect x="27" y="100" width="18" height="10" rx="3" fill="#222"/>
+  <rect x="6" y="38" width="38" height="36" rx="4" fill="#F5C400"/>
+  <rect x="-2" y="40" width="10" height="28" rx="4" fill="#F5C400"/>
+  <rect x="42" y="40" width="10" height="28" rx="4" fill="#F5C400"/>
+  <circle cx="3"  cy="70" r="6" fill="#F5C400"/>
+  <circle cx="47" cy="70" r="6" fill="#F5C400"/>
+  <rect x="19" y="30" width="12" height="10" rx="2" fill="#F5C400"/>
+  <rect x="8" y="6" width="34" height="28" rx="8" fill="#F5C400"/>
+  <circle cx="25" cy="6" r="6" fill="#F5C400" stroke="#c9a000" stroke-width="1.5"/>
+  <circle cx="17" cy="18" r="3" fill="#222"/>
+  <circle cx="33" cy="18" r="3" fill="#222"/>
+  <path d="M15 24 Q25 31 35 24" stroke="#222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <text x="25" y="55" font-family="Arial" font-size="20" text-anchor="middle">⭐</text>
+</svg>
+
+<!-- LANGUAGE PICKER -->
+<div id="lang-screen">
+  <div class="logo-studs">
+    <span></span><span></span><span></span><span></span>
+  </div>
+  <div class="logo-box">🧱 BRICK MATH</div>
+  <div class="lang-title" id="lang-title">Rafa's Math Quest</div>
+  <div class="lang-hint">Choose · Kies · בחר</div>
+  <button class="lang-btn en" onclick="chooseLang('en')">🇬🇧 &nbsp;English</button>
+  <button class="lang-btn nl" onclick="chooseLang('nl')">🇳🇱 &nbsp;Nederlands</button>
+  <button class="lang-btn he" onclick="chooseLang('he')">🇮🇱 &nbsp;עברית</button>
+</div>
+
+<!-- GAME -->
+<div id="game-shell">
+  <div class="hdr-studs">
+    <span class="hdr-stud"></span><span class="hdr-stud"></span>
+    <span class="hdr-stud"></span><span class="hdr-stud"></span>
+    <span class="hdr-stud"></span><span class="hdr-stud"></span>
+  </div>
+  <div class="hdr-brick" id="game-title">🧱 Rafa's Brick Math</div>
+  <div class="lvl-row">
+    <span class="lvl-tag" id="lvl-tag">Level 1</span>
+    <button class="lang-sw" onclick="switchLang()">🌐</button>
+  </div>
+
+  <div class="prog-labels">
+    <span id="q-count">Q 1/10</span>
+    <span class="right" id="q-score">Score: 0</span>
+  </div>
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+
+  <div class="chips">
+    <span class="chip">🔥 <span id="lbl-streak">Streak</span> <strong id="streak">0</strong></span>
+    <span class="chip">🏆 <strong id="best-disp">0</strong>/10</span>
+    <span class="chip">🧱 R<strong id="round-disp">1</strong></span>
+  </div>
+
+  <div class="pips" id="pips"></div>
+
+  <div class="card-studs" id="card-studs"></div>
+
+  <div class="card" id="game-card">
+    <div id="game-view">
+      <div class="q-label" id="q-label">Addition</div>
+      <div class="question" id="question"></div>
+      <button class="hint-btn" id="hint-btn" onclick="showHint()">💡 Hint</button>
+      <div class="visual-wrap" id="visual-wrap"></div>
+      <div class="options clearfix" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>
+    </div>
+
+    <div class="round-complete" id="round-complete">
+      <span class="trophy-big" id="trophy">🏆</span>
+      <div class="rc-title" id="rc-title"></div>
+      <div class="rc-msg" id="rc-msg"></div>
+      <div class="medals-row" id="medals-row"></div>
+      <div class="medals-total" id="medals-total" style="display:none"></div>
+      <div class="lvlup-card" id="lvlup-card">
+        <span class="lvlup-badge">🚀</span>
+        <div class="lvlup-title" id="lvlup-title">You levelled up!</div>
+        <div class="lvlup-sub" id="lvlup-sub">Score &gt;80% unlocked next!</div>
+        <span class="lvlup-name" id="lvlup-name"></span>
+      </div>
+      <button class="action-btn go" id="action-btn" onclick="startRound()">Play Again</button>
+      <br><button class="hist-toggle" onclick="toggleHist()">📊 History</button>
+    </div>
+  </div>
+
+  <div class="history-panel" id="hist-panel">
+    <span class="hist-title" id="hist-title">📊 Progress</span>
+    <div id="hist-list"></div>
+  </div>
+</div>
+
+<script>
+// ── NO eval, no arrow functions, no const/let, no template literals, no grid, no @import ──
+// All localStorage in try/catch with in-memory fallback
+// No external resources
+
+var _mem = {};
+function sg(k,d){ try{ var v=localStorage.getItem(k); return v!==null?v:(_mem[k]!==undefined?String(_mem[k]):d); }catch(e){ return _mem[k]!==undefined?String(_mem[k]):d; } }
+function ss(k,v){ _mem[k]=v; try{ localStorage.setItem(k,String(v)); }catch(e){} }
+function sgj(k){ try{ var v=localStorage.getItem(k); if(v) return JSON.parse(v); }catch(e){} return _mem[k]||[]; }
+function ssj(k,v){ _mem[k]=v; try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+
+var T = {
+  en:{
+    title:'🧱 Rafa\'s Brick Math', streak:'Streak',
+    qOf:function(c,t){ return 'Q '+c+'/'+t; },
+    score:function(s){ return 'Score: '+s; },
+    opLabel:{'+':'Addition ➕','-':'Subtraction ➖','x':'Multiplication ✖','d':'Division ➗'},
+    hintShow:'💡 Hint', hintUsed:'✓ Hint', next:'Next ➜',
+    miss:function(c){ return 'Almost! '+c+' 💪'; },
+    praise:['Great! 🌟','Correct! 🎉','Amazing! ⭐','Yes! 🚀','Brilliant! 💫','🔥🔥🔥','Super! 🌈','Nailed it! 💥'],
+    p100:'PERFECT! Incredible!', p80:'Amazing work!', p60:'Good job!', p0:'Keep going!',
+    rMsg:function(s,t){ return s+' out of '+t+' correct!'; },
+    luT:'You levelled up!', luS:'Score >80% — next level!',
+    goBtn:function(s){ return 'Build '+s+' 🧱'; }, again:'Play Again 🎮',
+    prog:'📊 History', histT:'📊 Progress', noR:'No rounds yet!',
+    totM:function(n){ return '🏅 '+n+' medals'; },
+    ml:{g:'Gold',s:'Silver',b:'Bronze',st:'Star',sh:'Shining',f:'On Fire!',l:'Lightning',s5:'5 Streak',p:'Perfect!'},
+    mExpl:function(r,c){ var a=[]; for(var i=0;i<r;i++) a.push(c); return r+' x '+c+' = '+a.join('+'); },
+    rText:function(r,c){ return r+' rows of '+c; },
+    dText:function(g,p){ return g+' groups of '+p; }
+  },
+  nl:{
+    title:'🧱 Rafa\'s Steen Math', streak:'Reeks',
+    qOf:function(c,t){ return 'V '+c+'/'+t; },
+    score:function(s){ return 'Score: '+s; },
+    opLabel:{'+':'Optellen ➕','-':'Aftrekken ➖','x':'Keer ✖','d':'Delen ➗'},
+    hintShow:'💡 Hint', hintUsed:'✓ Hint', next:'Volgende ➜',
+    miss:function(c){ return 'Bijna! '+c+' 💪'; },
+    praise:['Goed! 🌟','Correct! 🎉','Geweldig! ⭐','Ja! 🚀','Super! 💫','🔥🔥🔥','Top! 🌈','Goed zo! 💥'],
+    p100:'PERFECT! Geweldig!', p80:'Fantastisch!', p60:'Goed gedaan!', p0:'Blijf oefenen!',
+    rMsg:function(s,t){ return s+' van '+t+' goed!'; },
+    luT:'Niveau omhoog!', luS:'Score >80% — volgende!',
+    goBtn:function(s){ return 'Bouw '+s+' 🧱'; }, again:'Nog een keer 🎮',
+    prog:'📊 Voortgang', histT:'📊 Voortgang', noR:'Nog geen rondes!',
+    totM:function(n){ return '🏅 '+n+' medailles'; },
+    ml:{g:'Goud',s:'Zilver',b:'Brons',st:'Ster',sh:'Schitterend',f:'In Vuur!',l:'Bliksem',s5:'5 op rij',p:'Perfect!'},
+    mExpl:function(r,c){ var a=[]; for(var i=0;i<r;i++) a.push(c); return r+' x '+c+' = '+a.join('+'); },
+    rText:function(r,c){ return r+' rijen van '+c; },
+    dText:function(g,p){ return g+' groepen van '+p; }
+  },
+  he:{
+    title:'🧱 משחק הלגו של רפא', streak:'רצף',
+    qOf:function(c,t){ return 'ש '+c+'/'+t; },
+    score:function(s){ return 'ניקוד: '+s; },
+    opLabel:{'+':'חיבור ➕','-':'חיסור ➖','x':'כפל ✖','d':'חילוק ➗'},
+    hintShow:'💡 רמז', hintUsed:'✓ רמז', next:'הבא ➜',
+    miss:function(c){ return 'כמעט! '+c+' 💪'; },
+    praise:['כל הכבוד! 🌟','נכון! 🎉','מדהים! ⭐','כן! 🚀','פנטסטי! 💫','🔥🔥🔥','סופר! 🌈','אלוף! 💥'],
+    p100:'מושלם! רפא אלוף!', p80:'עבודה מדהימה!', p60:'כל הכבוד!', p0:'המשך להתאמן!',
+    rMsg:function(s,t){ return s+' מתוך '+t+' נכון!'; },
+    luT:'עלית רמה!', luS:'ניקוד >80% — הבא!',
+    goBtn:function(s){ return 'בנה '+s+' 🧱'; }, again:'שחק שוב 🎮',
+    prog:'📊 היסטוריה', histT:'📊 התקדמות', noR:'עדיין אין!',
+    totM:function(n){ return '🏅 '+n+' מדליות'; },
+    ml:{g:'זהב',s:'כסף',b:'ארד',st:'כוכב',sh:'זוהר',f:'בוער!',l:'ברק',s5:'5 ברצף',p:'מושלם!'},
+    mExpl:function(r,c){ var a=[]; for(var i=0;i<r;i++) a.push(c); return r+' x '+c+' = '+a.join('+'); },
+    rText:function(r,c){ return r+' שורות של '+c; },
+    dText:function(g,p){ return g+' קבוצות של '+p; }
+  }
+};
+
+var LEVELS = [
+  {t:'as',mA:10,mB:5, ops:['+'      ]},
+  {t:'as',mA:15,mB:10,ops:['+','-'  ]},
+  {t:'as',mA:20,mB:15,ops:['+','-'  ]},
+  {t:'as',mA:30,mB:20,ops:['+','-'  ]},
+  {t:'as',mA:50,mB:30,ops:['+','-'  ]},
+  {t:'md',tb:[2,3,5],          ops:['x'    ]},
+  {t:'md',tb:[2,3,4,5,6],      ops:['x','d']},
+  {t:'md',tb:[2,3,4,5,6,7,8],  ops:['x','d']},
+  {t:'md',tb:[3,4,5,6,7,8,9],  ops:['x','d']},
+  {t:'md',tb:[4,5,6,7,8,9,10], ops:['x','d']},
+];
+var LBL = {
+  en:['Starter','Explorer','Adventurer','Champion','Master','Multiplier','Times Tables','Speed Calc','Mathlete','Legend'],
+  nl:['Beginner','Ontdekker','Avonturier','Kampioen','Meester','Vermenigvuldiger','Tafels','Snelrekenen','Rekenaar','Legende'],
+  he:['מתחיל','חוקר','הרפתקן','אלוף','מאסטר','מכפיל','לוחות','חישוב','מתמטיקאי','אגדה']
+};
+var LCOL = ['#00852B','#006CB7','#7B3FA0','#D01012','#c45e00','#3B7EC8','#8B0000','#005a1d','#6a006a','#222'];
+var LSHA = ['#005a1d','#004a80','#522a6e','#8a0000','#8a4000','#254f80','#4a0000','#003311','#450045','#000'];
+var TOTAL_Q = 10;
+
+var lang = sg('rafa_lang','');
+var li   = parseInt(sg('rafa_level','0'),10);
+var rn   = parseInt(sg('rafa_round','1'),10);
+var best = parseInt(sg('rafa_best','0'),10);
+var totM = parseInt(sg('rafa_medals','0'),10);
+var hist = sgj('rafa_history');
+var cQ=0, sc=0, stk=0, ans_done=false, lvlUp=false, erpend=false;
+var qs=[], hShown=false, hTimer=null;
+
+function r(n){ return Math.floor(Math.random()*n); }
+function tx(){ return T[lang]||T['en']; }
+function llabel(i){ return (LBL[lang]||LBL['en'])[i]||('L'+(i+1)); }
+function opDisp(op){ return op==='-'?'\u2212':op==='x'?'\u00d7':op==='d'?'\u00f7':'+'; }
+
+// Build pips
+(function(){
+  var w=document.getElementById('pips');
+  var s=''; for(var i=0;i<10;i++) s+='<span class="pip" id="pp'+i+'"></span>';
+  w.innerHTML=s;
+})();
+
+// Build card studs
+(function(){
+  var w=document.getElementById('card-studs');
+  var s=''; for(var i=0;i<9;i++) s+='<span class="card-stud"></span>';
+  w.innerHTML=s;
+})();
+
+function chooseLang(l){
+  lang=l; ss('rafa_lang',l);
+  document.getElementById('lang-screen').style.display='none';
+  document.getElementById('game-shell').style.display='block';
+  if(l==='he'){ document.body.className='rtl'; document.documentElement.setAttribute('dir','rtl'); }
+  else        { document.body.className='';    document.documentElement.setAttribute('dir','ltr'); }
+  applyLabels(); updateHdr(); startRound();
+}
+function switchLang(){
+  document.getElementById('game-shell').style.display='none';
+  document.getElementById('lang-screen').style.display='block';
+  document.body.className=''; document.documentElement.setAttribute('dir','ltr');
+}
+function applyLabels(){
+  var t=tx();
+  document.getElementById('game-title').innerHTML='🧱 '+llabel(li)+' — '+t.title.replace('🧱 ','');
+  document.getElementById('game-title').innerHTML=t.title;
+  document.getElementById('lbl-streak').textContent=t.streak;
+  document.getElementById('hist-title').textContent=t.histT;
+}
+function updateHdr(){
+  var col=LCOL[li]||'#006CB7', sha=LSHA[li]||'#004a80';
+  var tag=document.getElementById('lvl-tag');
+  tag.textContent='Level '+(li+1)+' — '+llabel(li);
+  tag.style.background=col; tag.style.boxShadow='0 4px 0 '+sha;
+  for(var i=0;i<10;i++){
+    var p=document.getElementById('pp'+i);
+    if(p) p.className='pip'+(i<li?' done':i===li?' active':'');
+  }
+  document.getElementById('round-disp').textContent=rn;
+  document.getElementById('best-disp').textContent=best;
+}
+
+// Question gen
+function mkOpts(a,sp){
+  var w={},wa=[],s=sp||1;
+  while(wa.length<3){ var v=a+(Math.random()<.5?1:-1)*(r(s)+1); if(v>0&&v!==a&&!w[v]){w[v]=1;wa.push(v);} s++; }
+  return wa.concat([a]).sort(function(){ return Math.random()-.5; });
+}
+function mkAS(lv,used){
+  var op=lv.ops[r(lv.ops.length)]; var a,b,ans,k,tr=0;
+  do{ if(op==='+'){ a=r(lv.mA)+1;b=r(lv.mB)+1;ans=a+b; }
+      else{ a=r(lv.mA)+2;b=r(Math.min(a-1,lv.mB))+1;ans=a-b; }
+      k=a+op+b; tr++;
+  }while(used[k]&&tr<80); used[k]=1;
+  return{a:a,b:b,op:op,ans:ans,opts:mkOpts(ans,1)};
+}
+function mkMD(lv,used){
+  var op=lv.ops[r(lv.ops.length)]; var a,b,ans,k,tr=0;
+  do{ var tb=lv.tb[r(lv.tb.length)];
+      if(op==='x'){a=tb;b=r(10)+1;ans=a*b;}
+      else{b=tb;ans=r(10)+1;a=b*ans;}
+      k=a+op+b; tr++;
+  }while(used[k]&&tr<80); used[k]=1;
+  return{a:a,b:b,op:op,ans:ans,opts:mkOpts(ans,2)};
+}
+function genRound(){
+  var lv=LEVELS[li],used={}; qs=[];
+  for(var i=0;i<TOTAL_Q;i++) qs.push(lv.t==='md'?mkMD(lv,used):mkAS(lv,used));
+}
+
+// Visuals — pure DOM, no grid
+function mkStud(col,delay){
+  var s=document.createElement('span'); s.className='stud';
+  s.style.background=col;
+  s.style.animationDelay=delay+'s';
+  return s;
+}
+function mkBrick(n,bg,bord,delay){
+  var el=document.createElement('span'); el.className='tbrick';
+  el.style.background=bg; el.style.borderColor=bord;
+  el.style.animationDelay=delay+'s';
+  var cap=Math.min(n,8);
+  // rows
+  var row=document.createElement('span'); row.className='stud-row';
+  for(var i=0;i<cap;i++){
+    var s=mkStud(bg,delay+i*0.03); row.appendChild(s);
+  }
+  el.appendChild(row);
+  return el;
+}
+function buildAS(q){
+  var wrap=document.createElement('span');
+  wrap.style.direction='ltr'; wrap.style.display='block'; wrap.style.textAlign='center';
+  var capA=Math.min(q.a,12), capB=Math.min(q.b,12);
+  wrap.appendChild(mkBrick(capA,'#D01012','#8a0000',0));
+  var sym=document.createElement('span'); sym.className='hint-eq';
+  sym.textContent=q.op==='+'?'+':'\u2212'; wrap.appendChild(sym);
+  wrap.appendChild(mkBrick(capB,q.op==='+'?'#00852B':'#F5C400',q.op==='+'?'#005a1d':'#b89200',0.1));
+  var eq=document.createElement('span'); eq.className='hint-eq'; eq.textContent='= ?';
+  wrap.appendChild(eq);
+  if(q.a>12||q.b>12){
+    var note=document.createElement('div');
+    note.style.cssText='font-size:.72rem;color:#999;margin-top:4px;direction:ltr;';
+    note.textContent=q.a+(q.op==='+'?' + ':' - ')+q.b;
+    wrap.appendChild(note);
+  }
+  return wrap;
+}
+function buildMult(q){
+  var t=tx(); var rows=q.a,cols=q.b;
+  var wrap=document.createElement('div'); wrap.className='mult-grid-wrap';
+  var expl=document.createElement('div'); expl.className='mult-expl';
+  expl.textContent=t.mExpl(rows,cols);
+  wrap.appendChild(expl);
+  if(rows*cols>60){
+    var msg=document.createElement('div'); msg.style.cssText='color:#888;font-size:.8rem;';
+    msg.textContent=t.rText(rows,cols); wrap.appendChild(msg); return wrap;
+  }
+  for(var rv=0;rv<rows;rv++){
+    var row=document.createElement('div'); row.className='mgrow';
+    for(var cv=0;cv<cols;cv++){
+      var d=document.createElement('span'); d.className='mdot';
+      d.style.animationDelay=((rv*cols+cv)*0.025)+'s'; row.appendChild(d);
+    }
+    wrap.appendChild(row);
+  }
+  return wrap;
+}
+function buildDiv(q){
+  var t=tx(); var groups=q.b,perG=q.ans;
+  var wrap=document.createElement('div'); wrap.className='div-groups-wrap';
+  var lbl=document.createElement('div'); lbl.className='mult-expl';
+  lbl.textContent=t.dText(groups,perG); wrap.appendChild(lbl);
+  if(groups*perG>60) return wrap;
+  var row=document.createElement('div'); row.className='dg-row';
+  for(var g=0;g<groups;g++){
+    var grp=document.createElement('div'); grp.className='dgroup';
+    grp.style.animationDelay=(g*0.08)+'s';
+    for(var d=0;d<perG;d++){
+      var dot=document.createElement('span'); dot.className='gdot';
+      dot.style.animationDelay=((g*perG+d)*0.025)+'s'; grp.appendChild(dot);
+    }
+    row.appendChild(grp);
+  }
+  wrap.appendChild(row);
+  return wrap;
+}
+function buildVis(q){
+  if(q.op==='+'||q.op==='-') return buildAS(q);
+  if(q.op==='x') return buildMult(q);
+  return buildDiv(q);
+}
+
+// Hint timer
+function clrHint(){ if(hTimer){ clearTimeout(hTimer); hTimer=null; } }
+function startHintTimer(){
+  clrHint();
+  hTimer=setTimeout(function(){
+    if(!ans_done&&!hShown){
+      var b=document.getElementById('hint-btn'); if(b) b.className='hint-btn nudge';
+    }
+  },15000);
+}
+function showHint(){
+  if(hShown||cQ>=qs.length) return;
+  hShown=true; clrHint();
+  var b=document.getElementById('hint-btn');
+  if(b){ b.textContent=tx().hintUsed; b.className='hint-btn used'; b.disabled=true; }
+  var w=document.getElementById('visual-wrap'); w.innerHTML='';
+  w.appendChild(buildVis(qs[cQ]));
+}
+
+// Render Q
+function renderQ(){
+  if(cQ>=qs.length) return;
+  var q=qs[cQ]; var t=tx();
+  hShown=false;
+  document.getElementById('q-count').textContent=t.qOf(cQ+1,TOTAL_Q);
+  document.getElementById('q-score').textContent=t.score(sc);
+  document.getElementById('prog-fill').style.width=((cQ/TOTAL_Q)*100)+'%';
+  document.getElementById('streak').textContent=stk;
+  document.getElementById('q-label').textContent=t.opLabel[q.op]||q.op;
+  document.getElementById('question').innerHTML=
+    '<span class="num">'+q.a+'</span>'+
+    '<span class="op">'+opDisp(q.op)+'</span>'+
+    '<span class="num">'+q.b+'</span>'+
+    '<span class="op">=</span>'+
+    '<span class="qmark">?</span>';
+  var hb=document.getElementById('hint-btn');
+  hb.textContent=t.hintShow; hb.className='hint-btn'; hb.disabled=false;
+  document.getElementById('visual-wrap').innerHTML='';
+
+  // Build answer buttons
+  var wrap=document.getElementById('options'); wrap.innerHTML='';
+  var bgC=['#E0E0E0','#D8D8D8','#E4E4E4','#DCDCDC'];
+  var shC=['#aaa','#999','#a5a5a5','#9e9e9e'];
+  (function(qSnap){
+    for(var i=0;i<qSnap.opts.length;i++){
+      (function(ov,idx){
+        var half=document.createElement('div'); half.className='opt-half';
+        // studs row
+        var sr=document.createElement('div'); sr.className='opt-studs';
+        for(var s=0;s<3;s++){
+          var st=document.createElement('span'); st.className='opt-stud';
+          st.style.background=shC[idx]; sr.appendChild(st);
+        }
+        half.appendChild(sr);
+        var btn=document.createElement('button'); btn.className='opt';
+        btn.textContent=ov; btn.style.background=bgC[idx];
+        btn.style.boxShadow='0 6px 0 '+shC[idx];
+        btn.setAttribute('data-v',String(ov));
+        btn.addEventListener('click',function(){ handleAns(ov,btn,half,qSnap.ans); });
+        half.appendChild(btn);
+        wrap.appendChild(half);
+      })(qSnap.opts[i],i);
+    }
+  })(q);
+
+  document.getElementById('feedback').textContent='';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('next-btn').textContent=t.next;
+  document.getElementById('next-btn').style.display='none';
+  ans_done=false;
+  startHintTimer();
+}
+
+function handleAns(chosen,btn,half,correct){
+  if(ans_done) return;
+  ans_done=true; clrHint();
+  var allBtns=document.querySelectorAll('.opt');
+  for(var i=0;i<allBtns.length;i++) allBtns[i].disabled=true;
+  var fb=document.getElementById('feedback'); var t=tx();
+  if(chosen===correct){
+    btn.className='opt correct'; btn.style.background=''; btn.style.boxShadow='';
+    var sr=half.querySelector('.opt-studs');
+    if(sr){ var ss2=sr.childNodes; for(var j=0;j<ss2.length;j++) if(ss2[j].style) ss2[j].style.background='#005a1d'; }
+    sc++; stk++;
+    fb.textContent=t.praise[r(t.praise.length)]; fb.className='feedback ok';
+    document.getElementById('q-score').textContent=t.score(sc);
+    document.getElementById('streak').textContent=stk;
+    setTimeout(nextQ,950);
+  } else {
+    btn.className='opt wrong'; btn.style.background=''; btn.style.boxShadow='';
+    var sr2=half.querySelector('.opt-studs');
+    if(sr2){ var ss3=sr2.childNodes; for(var k=0;k<ss3.length;k++) if(ss3[k].style) ss3[k].style.background='#8a0000'; }
+    var allH=document.querySelectorAll('.opt-half');
+    for(var m=0;m<allH.length;m++){
+      var b2=allH[m].querySelector('.opt');
+      if(b2&&Number(b2.getAttribute('data-v'))===correct){
+        b2.className='opt correct'; b2.style.background=''; b2.style.boxShadow='';
+        var sr3=allH[m].querySelector('.opt-studs');
+        if(sr3){ var ss4=sr3.childNodes; for(var n=0;n<ss4.length;n++) if(ss4[n].style) ss4[n].style.background='#005a1d'; }
+      }
+    }
+    stk=0;
+    fb.textContent=t.miss(correct); fb.className='feedback bad';
+    document.getElementById('streak').textContent=stk;
+    document.getElementById('next-btn').style.display='inline-block';
+    if(!hShown) showHint();
+  }
+}
+
+function nextQ(){
+  if(erpend) return; cQ++;
+  if(cQ>=TOTAL_Q){ erpend=true; endRound(); return; }
+  renderQ();
+}
+
+// Medals
+function getMedals(s,sk){
+  var t=tx();var ml=t.ml;var earned=[];
+  if(s===10)     earned.push({i:'\uD83E\uDD47',l:ml.g});
+  else if(s===9) earned.push({i:'\uD83E\uDD48',l:ml.s});
+  else if(s===8) earned.push({i:'\uD83E\uDD49',l:ml.b});
+  else if(s===7) earned.push({i:'\u2B50',l:ml.st});
+  else if(s>=6)  earned.push({i:'\uD83C\uDF1F',l:ml.sh});
+  if(sk>=10)     earned.push({i:'\uD83D\uDD25',l:ml.f});
+  else if(sk>=7) earned.push({i:'\u26A1',l:ml.l});
+  else if(sk>=5) earned.push({i:'\uD83D\uDCAB',l:ml.s5});
+  if(s===10)     earned.push({i:'\uD83D\uDC51',l:ml.p});
+  return earned;
+}
+function showMedals(earned){
+  var row=document.getElementById('medals-row'); row.innerHTML='';
+  for(var i=0;i<earned.length;i++){
+    var m=earned[i];
+    var w=document.createElement('span');
+    w.innerHTML='<span class="medal-icon" style="-webkit-animation:medalPop .4s ease '+( i*0.15)+'s backwards;animation:medalPop .4s ease '+(i*0.15)+'s backwards">'+m.i+'</span><span class="medal-label">'+m.l+'</span>&nbsp;';
+    row.appendChild(w);
+  }
+  var chip=document.getElementById('medals-total');
+  if(totM>0){ chip.style.display='inline-block'; chip.textContent=tx().totM(totM); }
+  else chip.style.display='none';
+}
+
+function endRound(){
+  try{
+    clrHint();
+    var pct=sc/TOTAL_Q; var t=tx();
+    hist.push({d:new Date().toLocaleDateString(),s:sc,tot:TOTAL_Q,l:li,r:rn});
+    ssj('rafa_history',hist);
+    if(sc>best){ best=sc; ss('rafa_best',best); }
+    var earned=getMedals(sc,stk); totM+=earned.length; ss('rafa_medals',totM);
+    lvlUp=false;
+    if(pct>0.8&&li<LEVELS.length-1){ li++; lvlUp=true; ss('rafa_level',li); flashLU(); }
+    rn++; ss('rafa_round',rn);
+    document.getElementById('game-view').style.display='none';
+    document.getElementById('round-complete').style.display='block';
+    var troph=document.getElementById('trophy');
+    if(pct===1)troph.textContent='\uD83C\uDFC6';
+    else if(pct>0.8)troph.textContent='\uD83E\uDD47';
+    else if(pct>=0.6)troph.textContent='\uD83E\uDD48';
+    else troph.textContent='\u2B50';
+    document.getElementById('rc-title').textContent=pct===1?t.p100:pct>0.8?t.p80:pct>=0.6?t.p60:t.p0;
+    document.getElementById('rc-msg').textContent=t.rMsg(sc,TOTAL_Q);
+    document.getElementById('lvlup-title').textContent=t.luT;
+    document.getElementById('lvlup-sub').textContent=t.luS;
+    showMedals(earned);
+    var lc=document.getElementById('lvlup-card');
+    var ab=document.getElementById('action-btn');
+    if(lvlUp){
+      lc.style.display='block';
+      document.getElementById('lvlup-name').textContent='Level '+(li+1)+' — '+llabel(li);
+      ab.textContent=t.goBtn(llabel(li)); ab.className='action-btn go';
+    } else {
+      lc.style.display='none'; ab.textContent=t.again; ab.className='action-btn again';
+    }
+    document.getElementById('hist-toggle').textContent=t.prog;
+    if(pct>0.8) confetti();
+    updateHdr();
+  }catch(err){
+    try{
+      document.getElementById('game-view').style.display='none';
+      document.getElementById('round-complete').style.display='block';
+      document.getElementById('trophy').textContent='\uD83C\uDFC6';
+      document.getElementById('rc-title').textContent='Round done!';
+      document.getElementById('rc-msg').textContent=sc+'/'+TOTAL_Q;
+      document.getElementById('lvlup-card').style.display='none';
+      var ab2=document.getElementById('action-btn');
+      ab2.textContent='Play Again'; ab2.className='action-btn again';
+    }catch(e2){}
+  }
+}
+
+function startRound(){
+  cQ=0;sc=0;stk=0;ans_done=false;hShown=false;erpend=false;
+  clrHint(); genRound();
+  document.getElementById('game-view').style.display='block';
+  document.getElementById('round-complete').style.display='none';
+  updateHdr(); renderQ();
+}
+
+function renderHist(){
+  var t=tx();
+  document.getElementById('hist-title').textContent=t.histT;
+  var list=document.getElementById('hist-list'); list.innerHTML='';
+  var rec=hist.slice(-12).reverse();
+  if(!rec.length){ list.innerHTML='<div style="text-align:center;color:#666;padding:12px">'+t.noR+'</div>'; return; }
+  for(var i=0;i<rec.length;i++){
+    var rv=rec[i]; var p=rv.s/rv.tot;
+    var cl=p>0.8?'hi':p>=0.6?'mid':'lo';
+    var li2=typeof rv.l==='number'?rv.l:0;
+    var row=document.createElement('div'); row.className='hist-row';
+    var lvStr='L'+(li2+1)+' '+llabel(li2);
+    row.innerHTML=rv.d+' \u00b7 R'+(rv.r||'?')+
+      '<span class="right"><span style="font-size:.7rem;opacity:.6">'+lvStr+'</span> <span class="pill '+cl+'">'+rv.s+'/'+rv.tot+'</span></span>';
+    list.appendChild(row);
+  }
+}
+function toggleHist(){
+  var p=document.getElementById('hist-panel');
+  p.style.display=p.style.display==='block'?'none':'block';
+  renderHist();
+}
+
+function confetti(){
+  var cols=['#D01012','#F5C400','#006CB7','#00852B','#E76419','#fff'];
+  for(var i=0;i<60;i++){
+    var el=document.createElement('div'); el.className='cf';
+    el.style.left=(Math.random()*100)+'%'; el.style.top='-10px';
+    el.style.background=cols[r(cols.length)];
+    el.style.width=(6+r(12))+'px'; el.style.height=(4+r(8))+'px';
+    el.style.animationDuration=(1.5+Math.random()*2)+'s';
+    el.style.animationDelay=(Math.random()*.8)+'s';
+    document.body.appendChild(el);
+    el.addEventListener('animationend',function(){ if(this.parentNode) this.parentNode.removeChild(this); });
+  }
+}
+function flashLU(){
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;z-index:998;background:radial-gradient(circle,rgba(245,196,0,.4) 0%,transparent 70%);pointer-events:none;';
+  document.body.appendChild(el);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },900);
+}
+
+// INIT
+if(lang){
+  document.getElementById('lang-screen').style.display='none';
+  document.getElementById('game-shell').style.display='block';
+  if(lang==='he'){ document.body.className='rtl'; document.documentElement.setAttribute('dir','rtl'); }
+  applyLabels(); updateHdr(); startRound();
+} else {
+  document.getElementById('lang-screen').style.display='block';
+  document.getElementById('game-shell').style.display='none';
+}
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+
+<div id="ios-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#F5C400;color:#1a1a1a;text-align:center;padding:12px 16px 20px;font-size:.82rem;font-weight:900;box-shadow:0 -3px 0 #b89200;">
+  🧱 Install as app: tap <strong>Share</strong> then <strong>Add to Home Screen</strong>
+  <button onclick="document.getElementById('ios-banner').style.display='none'" style="position:absolute;right:12px;top:10px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#1a1a1a;">✕</button>
+</div>
+<script>
+// Show install banner on iOS Safari only, once per session
+var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+var isStandalone = window.navigator.standalone;
+var shownBanner = false;
+try{ shownBanner = sessionStorage.getItem('banner_shown'); }catch(e){}
+if(isIOS && !isStandalone && !shownBanner){
+  setTimeout(function(){
+    document.getElementById('ios-banner').style.display='block';
+    try{ sessionStorage.setItem('banner_shown','1'); }catch(e){}
+  }, 4000);
+}
+</script>
+</body>
+</html>
